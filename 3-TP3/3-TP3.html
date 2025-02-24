@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion de Tâches</title>
+  <script src="https://unpkg.com/vue@latest"></script>
+  <style>
+    .task {
+      border: 1px solid #ccc;
+      margin: 1rem 0;
+      padding: 1rem;
+    }
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      margin-right: 1rem;
+      cursor: pointer;
+      border: none;
+      background-color: #f0f0f0;
+    }
+    .active-filter {
+      background-color: #4caf50;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <task-list></task-list>
+  </div>
+  
+  <script>
+    const TaskList = {
+      template: `
+        <div>
+          <h1>Liste des Tâches</h1>
+          
+          <div>
+            <button 
+              v-bind:class="{'filter-btn': true, 'active-filter': filter === 'all'}" 
+              v-on:click="setFilter('all')">
+              Toutes
+            </button>
+            <button 
+              v-bind:class="{'filter-btn': true, 'active-filter': filter === 'todo'}" 
+              v-on:click="setFilter('todo')">
+              À faire
+            </button>
+            <button 
+              v-bind:class="{'filter-btn': true, 'active-filter': filter === 'completed'}" 
+              v-on:click="setFilter('completed')">
+              Terminées
+            </button>
+          </div>
+          
+          <p>Total des tâches : {{ totalTasks }}</p>
+          
+          <div v-for="task in filteredTasks" v-bind:key="task.id" class="task">
+            <h3 v-bind:class="{ 'completed': task.completed }">{{ task.title }}</h3>
+            <p>{{ task.description }}</p>
+            
+            <button v-if="!task.completed" v-on:click="markCompleted(task)">
+              Marquer comme terminée
+            </button>
+          </div>
+        </div>
+      `,
+      data() {
+        return {
+          tasks: [],
+          filter: 'all'
+        }
+      },
+      computed: {
+        filteredTasks() {
+          if (this.filter === 'all') {
+            return this.tasks;
+          } else if (this.filter === 'todo') {
+            return this.tasks.filter(task => !task.completed);
+          } else if (this.filter === 'completed') {
+            return this.tasks.filter(task => task.completed);
+          }
+          return this.tasks;
+        },
+        totalTasks() {
+          return this.tasks.length;
+        }
+      },
+      methods: {
+        setFilter(newFilter) {
+          this.filter = newFilter;
+        },
+        markCompleted(task) {
+          task.completed = true;
+        },
+        loadTasks() {
+          fetch('taskList.json')
+            .then(response => response.json())
+            .then(data => {
+              this.tasks = data;
+            })
+            .catch(error => console.error("Erreur lors du chargement des tâches :", error));
+        }
+      },
+      mounted() {
+        this.loadTasks();
+      }
+    };
+
+    const app = Vue.createApp({});
+    app.component('task-list', TaskList);
+    app.mount('#app');
+  </script>
+</body>
+</html>
